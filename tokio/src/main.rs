@@ -26,7 +26,7 @@ async fn main() -> error::Result<()> {
     let (tx, rx) = tokio::sync::mpsc::channel::<Message>(32);
 
     tokio::spawn(async {
-        process(conn, rx).await;
+        process(conn, rx).await.unwrap();
     });
 
     let mut set = JoinSet::new();
@@ -44,13 +44,14 @@ async fn main() -> error::Result<()> {
 async fn process(
     mut conn: redis::aio::MultiplexedConnection,
     mut rx: tokio::sync::mpsc::Receiver<Message>,
-) {
+) -> error::Result<()> {
     let mut len = 0;
     while let Some(Message::FileRead(file_name, l)) = rx.recv().await {
         len += l;
         log::info!("file {file_name}, len: {l}");
-        let _: Result<(), _> = conn.set("outputChannel", len).await;
+        let _: String = conn.set("outputChannel", len).await?;
     }
+    Ok(())
 }
 
 async fn read_file(path: String, tx: tokio::sync::mpsc::Sender<Message>) -> error::Result<()> {

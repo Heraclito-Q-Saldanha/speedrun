@@ -10,3 +10,10 @@ clap = { version = "4.5.30", features = ["derive"] }
 r2d2 = "0.8.10"
 log = "0.4.26"
 simple_logger = "5.0.0"
+
+[profile.release]
+strip = true
+lto = true
+opt-level = "z"
+codegen-units = 1
+panic = "abort"
